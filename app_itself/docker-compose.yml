@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./server
+    container_name: fastapi-app
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/notesdb  # URI MongoDB, доступный через имя сервиса 'mongodb'
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongo-db
+    volumes:
+      - mongodb-data:/data/db  # Храним данные MongoDB на локальном диске
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local

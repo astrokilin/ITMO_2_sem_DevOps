@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактировать заметку</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Редактировать заметку</h1>
+    <form action="/edit/{{ note['id'] }}" method="post">
+        <label for="title">Заголовок:</label>
+        <input type="text" id="title" name="title" value="{{ note['title'] }}" required><br><br>
+        
+        <label for="content">Содержание:</label>
+        <textarea id="content" name="content" required>{{ note['content'] }}</textarea><br><br>
+        
+        <button type="submit">Сохранить изменения</button>
+    </form>
+    <br><br>
+    <a href="/">Вернуться к списку</a>
+</body>
+</html>
