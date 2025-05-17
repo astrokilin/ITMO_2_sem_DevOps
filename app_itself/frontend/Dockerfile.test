@@ -1,0 +1,6 @@
+FROM node:20-slim
+
+COPY . .
+RUN npm install --prefix /tests
+
+CMD ["node", "tests/run-tests-node.js"]

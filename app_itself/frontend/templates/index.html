@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .note-title {
+        		border: 1px solid #ccc;
+        		padding: 10px;
+        		width: 20%;
+        		background-color: #f9f9f9;
+        		font-size: 1.2em;
+        		margin-bottom: 15px;
+        		border-radius: 8px;
+        		box-sizing: border-box;
+        		overflow: auto;
+        		white-space: pre-wrap;
+        		word-wrap: break-word;
+        }
+    </style>
+    <style>
+        .note-content {
+        		border: 1px solid #ccc;
+        		padding: 10px;
+        		width: 100%;
+        		background-color: #f9f9f9;
+        		font-size: 1em;
+        		border-radius: 8px;
+        		box-sizing: border-box;
+        		overflow: auto;
+        		white-space: pre-wrap;
+        		word-wrap: break-word;
+        		margin-bottom: 15px;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <title>Заметки</title>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <script>
+        function toggleEdit(note_id, toEdit) {
+        								const view = document.getElementById(`view-${note_id}`);
+        								const edit = document.getElementById(`edit-${note_id}`);
+        								if (toEdit) {
+        										view.style.display = 'none';
+        										edit.style.display = 'block';
+        								} else {
+        										view.style.display = 'block';
+        										edit.style.display = 'none';
+        								}
+        						}
+    </script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        form { margin-bottom: 20px; }
+        textarea { width: 100%; height: 60px; }
+        .note { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+
+<body>
+
+    <h1>Заметки</h1>
+
+    <form id="create-form" hx-post="/notes" hx-trigger="submit" hx-target="#notes" hx-swap="beforeend">
+        <input class="note-title" type="text" name="title" placeholder="Заголовок" required><br>
+        <textarea class="note-content" name="content" placeholder="Содержание" required></textarea><br>
+        <button type="submit">Создать</button>
+    </form>
+
+    <hr>
+
+    <!-- READ (начальная загрузка) -->
+    <div id="notes" hx-get="/notes" hx-trigger="load" hx-swap="innerHTML">
+        Загрузка...
+    </div>
+
+    <!-- Шаблон note-item будет возвращаться с сервера -->
+    <template id="note-template">
+						<div class="note" id="note-{{id}}">
+								<form hx-put="/notes/{{id}}" hx-target="#note-{{id}}" hx-swap="outerHTML">
+										<input type="text" name="title" value="{{title}}" required><br>
+										<textarea name="content" required>{{content}}</textarea><br>
+										<button type="submit">Сохранить</button>
+										<button hx-delete="/notes/{{id}}" hx-target="#note-{{id}}" hx-swap="outerHTML">Удалить</button>
+								</form>
+						</div>
+				</template>
+
+</body>
+
+</html>

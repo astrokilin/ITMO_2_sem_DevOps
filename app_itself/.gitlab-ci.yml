@@ -1,0 +1,37 @@
+stages:
+  - test
+  - build
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"  # Для работы Docker-in-Docker
+  COMPOSE_PROJECT_NAME: "gitlab-test"  # Уникальное имя проекта
+
+default:
+  image: docker:20.10.24
+  services:
+    - docker:20.10.24-dind
+    - mongo:latest
+  before_script:
+    - apk add --no-cache docker-compose
+    - docker info
+
+test_backend:
+  stage: test
+  script:
+    - docker-compose -f docker_compose-test_backend.yml up --abort-on-container-exit
+  artifacts:
+    reports:
+      junit: backend/test-results.xml
+
+test_frontend:
+  stage: test
+  script:
+    - docker-compose -f docker_compose-test_frontend.yml up --abort-on-container-exit
+  artifacts:
+    reports:
+      junit: frontend/junit.xml
+
+build_app:
+  stage: build
+  script:
+    - docker-compose -f docker-compose.yml build

@@ -1,0 +1,19 @@
+<div class="note" id="note-{{id}}" style="all: unset;">
+  <div id="view-{{id}}">
+    <div class="note-title">{{ title | safe }}</div>
+    <div class="note-content">{{ content | safe }}</div>
+    <div style="display: flex; gap: 10px; justify-content: flex-start;">
+      <button onclick="toggleEdit('{{id}}', true)">Редактировать</button>
+      <button hx-delete="/notes/{{id}}" hx-target="#note-{{id}}" hx-swap="outerHTML">Удалить</button>
+    </div>
+  </div>
+
+  <form id="edit-{{id}}" style="display: none;" hx-put="/notes/{{id}}" hx-target="#note-{{id}}" hx-swap="outerHTML">
+	<input name="title" class="note-title" value="{{title}}"required>
+    <textarea name="content" class="note-content" required>{{ content }}</textarea>
+    <div style="display: flex; gap: 10px; justify-content: flex-start;">
+      <button type="submit">Сохранить</button>
+      <button type="button" onclick="toggleEdit('{{id}}', false)">Отмена</button>
+    </div>
+  </form>
+</div>

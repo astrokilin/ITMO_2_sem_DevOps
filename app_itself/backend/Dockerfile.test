@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.11-slim
 
 # Устанавливаем рабочую директорию в контейнере
 WORKDIR /app
@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . /app
 
 # Устанавливаем зависимости
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt httpx pytest pymongo
 
 # Устанавливаем Uvicorn для запуска FastAPI
 RUN pip install uvicorn
@@ -15,5 +15,4 @@ RUN pip install uvicorn
 # Открываем порт для приложения
 EXPOSE 8000
 
-# Команда для запуска FastAPI с Uvicorn
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["pytest", "test", "-v", "--disable-warnings", "--junitxml=test-results.xml"]

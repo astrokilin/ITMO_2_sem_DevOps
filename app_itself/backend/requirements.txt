@@ -2,3 +2,5 @@ fastapi
 motor
 uvicorn
 jinja2
+python-multipart
+bleach

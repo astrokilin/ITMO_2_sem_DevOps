@@ -1,0 +1,10 @@
+services:
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+    container_name: frontend-test
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./reports:/app  # junit.xml сохранится здесь
