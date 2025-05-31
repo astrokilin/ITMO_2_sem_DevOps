@@ -6,13 +6,16 @@ WORKDIR /app
 # Копируем файлы проекта в контейнер
 COPY . /app
 
+USER gitlab-runner
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt httpx pytest pymongo
 
 # Устанавливаем Uvicorn для запуска FastAPI
 RUN pip install uvicorn
 
+RUN chmod u+x /app/test/entrypoint.sh
+
 # Открываем порт для приложения
 EXPOSE 8000
 
-CMD ["pytest", "test", "-v", "--disable-warnings", "--junitxml=test-results.xml"]
+CMD ["./test/entrypoint.sh"]

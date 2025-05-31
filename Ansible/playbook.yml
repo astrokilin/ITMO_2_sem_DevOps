@@ -1,0 +1,22 @@
+- name: Install Docker using snap
+  hosts: remote
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Update APT package index
+      raw: apt update -y
+
+    - name: Install snapd
+      raw: apt install -y snapd
+
+    - name: Enable and start snapd
+      raw: systemctl enable --now snapd.socket
+
+    - name: Wait for snapd to be ready
+      raw: sleep 5
+
+    - name: Install core snap (required by Docker)
+      raw: snap install core
+
+    - name: Install Docker via snap
+      raw: snap install docker

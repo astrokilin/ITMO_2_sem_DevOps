@@ -1,0 +1,26 @@
+- name: Remove snap and Docker installed via raw commands
+  hosts: remote
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Remove Docker snap package
+      raw: snap remove docker || true
+
+    - name: Remove core snap package
+      raw: snap remove core || true
+
+    - name: Stop snapd services
+      raw: systemctl stop snapd.service snapd.socket || true
+
+    - name: Disable snapd services
+      raw: systemctl disable snapd.service snapd.socket || true
+
+    - name: Uninstall snapd package
+      raw: apt purge -y snapd
+
+    - name: Remove snap directories
+      raw: rm -rf /snap /var/snap /var/lib/snapd /home/*/snap
+
+    - name: Autoremove leftover packages
+      raw: apt autoremove -y

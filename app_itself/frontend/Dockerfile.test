@@ -1,6 +1,10 @@
 FROM node:20-slim
 
 COPY . .
-RUN npm install --prefix /tests
 
-CMD ["node", "tests/run-tests-node.js"]
+USER gitlab-runner
+
+RUN npm install --prefix /tests
+RUN chmod u+x tests/entrypoint.sh
+
+CMD ["./tests/entrypoint.sh"]

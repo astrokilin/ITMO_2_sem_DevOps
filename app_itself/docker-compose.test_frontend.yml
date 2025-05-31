@@ -7,4 +7,4 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./reports:/app  # junit.xml сохранится здесь
+      - ./reports:/app

@@ -21,6 +21,6 @@ setTimeout(() => {
         }
     });
 
-    builder.writeTo('junit.xml');
+    builder.writeTo('/app/frontend-test-results.xml');
     console.log('✅ Tests done. Report saved to junit.xml');
 }, 1000);
