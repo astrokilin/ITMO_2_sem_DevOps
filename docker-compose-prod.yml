@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  app:
+    image: backend:latest
+    container_name: fastapi-app
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/notesdb
+      - PROM_PORT=8100
+      - TELEGRAM_TOKEN=<TELEG_TOKEN>
+      - TELEGRAM_CHAT_ID=<TELEG_CHAT_ID>
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+
+  front:
+    image: frontend:latest
+    container_name: frontend-app
+    ports:
+      - "8080:5173"
+    command: ["./entrypoint.sh", "run"]
+    networks:
+      - app-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongo-db
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local
+

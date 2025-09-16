@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: ./backend
+    container_name: fastapi-app
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/notesdb
+      - PROM_PORT=8100
+      - TELEGRAM_TOKEN=7996486818:AAF7pbdvUayIOGClnvMIqf-ss0ZVcDKekkQ
+      - TELEGRAM_CHAT_ID=7183819920
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+
+  front:
+    build:
+      ./frontend
+    ports:
+      - "8080:5173"
+    command: ["./entrypoint.sh", "run"]
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongo-db
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local

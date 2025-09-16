@@ -1,0 +1,30 @@
+services:
+  app-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: fastapi-app-test
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongodb-test:27017/notesdb
+      - PYTHONPATH=/app
+      - PROM_PORT=8100
+    depends_on:
+      - mongodb-test
+    networks:
+      - app-network
+    volumes:
+      - ./coverage-reports:/reports
+
+  mongodb-test:
+    image: mongo:latest
+    container_name: mongo-db-test
+    networks:
+      - app-network
+    logging:
+      driver: "none"
+
+networks:
+  app-network:
+    driver: bridge

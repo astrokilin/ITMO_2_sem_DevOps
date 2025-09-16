@@ -1,0 +1,9 @@
+version: '3.9'
+
+services:
+  frontend-test:
+    build: ./frontend
+    container_name: frontend-test
+    volumes:
+      - ./coverage:/app/coverage
+    command: ["./entrypoint.sh", "test"]

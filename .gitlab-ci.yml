@@ -1,0 +1,120 @@
+stages:
+  - test
+  - sonarcheck
+  - build
+  - push
+  - deploy
+  - cleanup
+
+variables:
+  COMPOSE_PROJECT_NAME: "gitlab-test"
+  KEY_FROM_DEPLOY: "/home/t/.ssh/gitlab_deploy_key"
+  PROD_SERVER: "t@192.168.50.18"
+  DEPLOY_DIR: "/home/t/deploy"
+
+  IMAGE_TAG_BACKEND: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
+  LATEST_TAG_BACKEND: $CI_REGISTRY_IMAGE/backend:latest
+
+  IMAGE_TAG_FRONTEND: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
+  LATEST_TAG_FRONTEND: $CI_REGISTRY_IMAGE/frontend:latest
+
+#--- TEST STAGE ---
+test_backend:
+  stage: test
+  script:
+    docker compose -f docker-compose.test_backend.yml up --abort-on-container-exit
+  artifacts:
+    reports:
+      junit: coverage-reports/backend-test-results.xml
+    paths:
+      - coverage-reports/coverage-backend.xml
+    expire_in: 1h
+
+test_frontend:
+  stage: test
+  script:
+    docker compose -f docker-compose.test_frontend.yml up --abort-on-container-exit
+  artifacts:
+    paths:
+      - coverage/lcov.info
+      - coverage/cobertura-coverage.xml
+    expire_in: 1h
+
+# --- SONARQUBE ---
+sonarqube-check:
+  stage: sonarcheck
+  image: 
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    GIT_DEPTH: "0"
+  tags:
+    - sonarqube
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script: 
+    - sonar-scanner
+  allow_failure: false
+  only:
+    - master
+
+# --- BUILD STAGE ---
+build_backend:
+  stage: build
+  script:
+    - docker build -t $IMAGE_TAG_BACKEND backend/
+    - docker tag $IMAGE_TAG_BACKEND $LATEST_TAG_BACKEND
+  artifacts:
+    paths:
+      - backend
+    expire_in: 1h
+
+build_frontend:
+  stage: build
+  script:
+    - docker build -t $IMAGE_TAG_FRONTEND frontend/
+    - docker tag $IMAGE_TAG_FRONTEND $LATEST_TAG_FRONTEND
+  artifacts:
+    paths:
+      - frontend
+    expire_in: 1h
+
+# --- PUSH STAGE ---
+push_backend:
+  stage: push
+  needs: ["build_backend"]
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - docker push $IMAGE_TAG_BACKEND
+    - docker push $LATEST_TAG_BACKEND
+
+push_frontend:
+  stage: push
+  needs: ["build_frontend"]
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - docker push $IMAGE_TAG_FRONTEND
+    - docker push $LATEST_TAG_FRONTEND
+
+# --- DEPLOY ---
+deploy:
+  stage: deploy
+  needs:
+  - push_backend
+  - push_frontend
+  only:
+    - master
+  script:
+    - echo "Deploying to $PROD_SERVER"
+    - scp docker-compose-prod.yml $PROD_SERVER:$DEPLOY_DIR/docker-compose-prod.yml
+    - ssh $PROD_SERVER "set -x && sed -i \"s|<TELEG_TOKEN>|${TELEGRAM_TOKEN}|g\" ${DEPLOY_DIR}/docker-compose-prod.yml && sed -i \"s|<TELEG_CHAT_ID>|${TELEGRAM_CHAT_ID}|g\" ${DEPLOY_DIR}/docker-compose-prod.yml && echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY} && docker pull ${CI_REGISTRY_IMAGE}/backend:latest && docker tag ${CI_REGISTRY_IMAGE}/backend:latest backend:latest && docker pull ${CI_REGISTRY_IMAGE}/frontend:latest && docker tag ${CI_REGISTRY_IMAGE}/frontend:latest frontend:latest && cd ${DEPLOY_DIR} && docker compose -f docker-compose-prod.yml up -d";
+
+# --- CLEANUP ---
+cleanup:
+  stage: cleanup
+  script:
+    - docker system prune -af || true
+  when: always
